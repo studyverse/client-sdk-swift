@@ -38,7 +38,8 @@ public struct SwiftUIVideoView: NativeViewRepresentable {
                 renderMode: VideoView.RenderMode = .auto,
                 rotationOverride: VideoRotation? = nil,
                 isDebugMode: Bool = false,
-                isRendering: Binding<Bool>? = nil)
+                isRendering: Binding<Bool>? = nil,
+                size: Binding<CGSize>? = nil)
     {
         self.track = track
         self.layoutMode = layoutMode
@@ -47,7 +48,7 @@ public struct SwiftUIVideoView: NativeViewRepresentable {
         self.rotationOverride = rotationOverride
         self.isDebugMode = isDebugMode
 
-        videoViewDelegateReceiver = VideoViewDelegateReceiver(isRendering: isRendering)
+        videoViewDelegateReceiver = VideoViewDelegateReceiver(isRendering: isRendering, size: size)
     }
 
     public func makeView(context: Context) -> VideoView {
@@ -78,18 +79,31 @@ public struct SwiftUIVideoView: NativeViewRepresentable {
 /// This class receives ``VideoViewDelegate`` events since a struct can't be used for a delegate
 class VideoViewDelegateReceiver: VideoViewDelegate, Loggable {
     @Binding var isRendering: Bool
+    @Binding var size: CGSize
 
-    init(isRendering: Binding<Bool>?) {
+    init(isRendering: Binding<Bool>?, size: Binding<CGSize>?) {
         if let isRendering {
             _isRendering = isRendering
         } else {
             _isRendering = .constant(false)
+        }
+
+        if let size {
+            _size = size
+        } else {
+            _size = .constant(.zero)
         }
     }
 
     func videoView(_: VideoView, didUpdate isRendering: Bool) {
         DispatchQueue.main.async {
             self.isRendering = isRendering
+        }
+    }
+
+    func videoView(_ videoView: VideoView, didUpdate size: CGSize) {
+        DispatchQueue.main.async {
+            self.size = size
         }
     }
 }
